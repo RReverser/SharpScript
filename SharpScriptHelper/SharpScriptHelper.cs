@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using mshtml;
 
@@ -10,14 +11,25 @@ namespace SharpScript
     {
     }
 
+    public class ExternalVars
+    {
+        public dynamic this[string name]
+        {
+            get { return External.Get(name); }
+            set { External.Set(name, value); }
+        }
+    }
+
     public class External
     {
-        public static IHTMLWindow2 window { get { return document != null ? document.parentWindow : null; } }
-        public static IHTMLDocument2 document { get; protected set; }
+        public static IHTMLWindow2 Window { get { return Document != null ? Document.parentWindow : null; } }
+        public static IHTMLDocument2 Document { get; protected set; }
+
+        public static ExternalVars Vars = new ExternalVars();
 
         public static dynamic Get(string name)
         {
-            return window.GetType().InvokeMember(name, BindingFlags.GetProperty, null, window, null);
+            return Window.GetType().InvokeMember(name, BindingFlags.GetProperty, null, Window, null);
         }
 
         public static T Get<T>(string name)
@@ -39,7 +51,7 @@ namespace SharpScript
                 var array = Array.CreateInstance(elemType, length);
                 for (var i = 0; i < length; i++)
                 {
-                    var value = getComProp(i.ToString());
+                    var value = getComProp(i.ToString(CultureInfo.InvariantCulture));
                     array.SetValue(Convert.ChangeType(value, elemType), i);
                 }
 
@@ -55,13 +67,13 @@ namespace SharpScript
 
         public static void Set(string name, object value)
         {
-            Eval(string.Format("window['{0}']=null", name));
-            window.GetType().InvokeMember(name, BindingFlags.SetProperty, null, window, new[] { value });
+            Eval(string.Format("window['{0}'] = null", name));
+            Window.GetType().InvokeMember(name, BindingFlags.SetProperty, null, Window, new[] { value });
         }
 
         public static dynamic Eval(string code)
         {
-            return window.GetType().InvokeMember("eval", BindingFlags.InvokeMethod, null, window, new[] { code });
+            return Window.GetType().InvokeMember("eval", BindingFlags.InvokeMethod, null, Window, new object[] { code });
         }
     }
 }

@@ -13,6 +13,6 @@
         </Grid.RowDefinitions>
         <TextBox x:Name="Url" Text="d:\Docs\Visual Studio 2012\Projects\WpfApplication1\WpfApplication1\test.html" Grid.Row="0" Grid.Column="0" />
         <Button Content="Go" IsDefault="True" Grid.Row="0" Grid.Column="1" Click="Go_Click" />
-        <WebBrowser x:Name="browser" Grid.Row="1" Grid.ColumnSpan="2" Navigated="browser_Navigated" />
+        <WebBrowser x:Name="Browser" Grid.Row="1" Grid.ColumnSpan="2" Navigated="Browser_Navigated" />
     </Grid>
 </Window>

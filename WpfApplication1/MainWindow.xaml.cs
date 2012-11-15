@@ -4,21 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using HtmlAgilityPack;
-using System.Diagnostics;
 using System.CodeDom.Compiler;
-using Microsoft.CSharp;
 using System.Reflection;
 using System.IO;
 
@@ -29,33 +18,12 @@ namespace SharpScript
     {
         private const BindingFlags MethodFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod;
 
-        private WebBrowser browser;
         public Assembly Assembly { get; private set; }
 
-        /*
-        public IEnumerable<MethodInfo> SharpMethods(string className)
-        {
-            return
-                assembly.GetType(className)
-                .GetMethods(MethodFlags)
-                .Where(method => method.GetCustomAttribute<ExecuteAttribute>() == null);
-        }
-
-        public object SharpCall(string className)
-        {
-            MessageBox.Show("SharpCall: " + className);
-            return null;
-        }
-         */
-
+// ReSharper disable UnusedMember.Global
         public void SharpExecute(string className)
+// ReSharper restore UnusedMember.Global
         {
-            (browser.ObjectForScripting as HtmlInteropClass)
-            .Assembly
-            .GetType("External")
-            .GetProperty("document", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy | BindingFlags.SetProperty)
-            .SetValue(null, browser.Document, null);
-
             var methods =
                 Assembly.GetType(className)
                 .GetMethods(MethodFlags)
@@ -74,10 +42,8 @@ namespace SharpScript
             }
         }
 
-        public HtmlInteropClass(WebBrowser webBrowser, IEnumerable<string> assemblies, string code)
+        public HtmlInteropClass(IEnumerable<string> assemblies, string code)
         {
-            browser = webBrowser;
-
             #if SHARPSCRIPT_DEBUG
                 File.WriteAllText("E:\\test.cs", code);
             #endif
@@ -96,7 +62,7 @@ namespace SharpScript
 
             #region Compiler parameters
             var compilerParams =
-                new CompilerParameters()
+                new CompilerParameters
                 {
                     CompilerOptions = "/t:library /optimize",
                     GenerateInMemory = true,
@@ -130,6 +96,7 @@ namespace SharpScript
                 #if SHARPSCRIPT_DEBUG
                     MessageBox.Show(string.Join(Environment.NewLine, errors));
                 #endif
+                return;
             }
 
             Assembly = compilerResults.CompiledAssembly;
@@ -139,7 +106,7 @@ namespace SharpScript
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         public MainWindow()
         {
@@ -167,7 +134,8 @@ namespace SharpScript
             var sharpAssemblyMetas =
                 docNode
                 .Descendants("meta")
-                .Where(meta => meta.GetAttributeValue("name", "") == "assembly");
+                .Where(meta => meta.GetAttributeValue("name", "") == "assembly")
+                .ToList();
 
             var sharpAssemblies = sharpAssemblyMetas.Select(meta => meta.GetAttributeValue("content", ""));
 
@@ -185,7 +153,7 @@ namespace SharpScript
                         .Select(usingItem => usingItem.StartsWith(".") ? assemblyPath + (usingItem != "." ? usingItem : "") : usingItem);
                 });
 
-            sharpUsings = Enumerable.Concat(new[] { "System", "SharpScript" }, sharpUsings);
+            sharpUsings = new[] { "System", "SharpScript" }.Concat(sharpUsings);
             #endregion
 
             var sharpScripts =
@@ -201,11 +169,9 @@ namespace SharpScript
                     return new[] { "class " + className, "{", classCode, "}", string.Empty };
                 });
 
-            browser.ObjectForScripting =
+            Browser.ObjectForScripting =
                 new HtmlInteropClass
-                (
-                    browser,
-                    sharpAssemblies,
+                (sharpAssemblies,
                     string.Join
                     (
                         Environment.NewLine,
@@ -223,12 +189,20 @@ namespace SharpScript
                     )
                 );
 
-            browser.NavigateToString(docNode.OuterHtml);
+            Browser.NavigateToString(docNode.OuterHtml);
         }
 
-        private void browser_Navigated(object sender, NavigationEventArgs e)
+        private void Browser_Navigated(object sender, NavigationEventArgs e)
         {
+            var htmlInterop = Browser.ObjectForScripting as HtmlInteropClass;
 
+            if (htmlInterop == null || htmlInterop.Assembly == null) return;
+
+            htmlInterop
+            .Assembly
+            .GetType("External")
+            .GetProperty("Document", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy | BindingFlags.SetProperty)
+            .SetValue(null, Browser.Document, null);
         }
     }
 }

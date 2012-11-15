@@ -6,15 +6,22 @@
     <meta name="assembly" content="System.Windows.Forms" data-using="." />
 </head>
 <body>
+    <script type="text/x-csharp">
+        [Execute]
+        static void exec()
+        {
+            External.Vars["message"] = "hello world";
+        }
+    </script>
     <script type="text/javascript">
+        alert(message);
         var smth = [1, 2, 3];
     </script>
     <script type="text/x-csharp">
         [Execute]
         static void exec()
         {
-            var smth = External.Get<int[]>("smth");
-            MessageBox.Show(smth[0].ToString());
+            MessageBox.Show(External.Document.title);
         }
     </script>
 </body>
