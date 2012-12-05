@@ -1,3 +1,6 @@
 bin
 obj
-/packages/HtmlAgilityPack.1.4.6
+*.user
+*.suo
+!/packages/repositories.config
+/packages
