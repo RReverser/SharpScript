@@ -1,5 +1,5 @@
-﻿// #define SHARPSCRIPT_CACHE
-#define SHARPSCRIPT_DEBUG
+﻿#define SHARPSCRIPT_CACHE
+// #define SHARPSCRIPT_DEBUG
 
 using System;
 using System.Collections.Generic;
@@ -13,17 +13,17 @@ using System.IO;
 
 namespace SharpScript
 {
-    [System.Runtime.InteropServices.ComVisibleAttribute(true)]
+    [System.Runtime.InteropServices.ComVisible(true)]
     public class HtmlInteropClass
     {
         private const BindingFlags MethodFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod;
 
         public Assembly Assembly { get; private set; }
 
-// ReSharper disable UnusedMember.Global
         public void SharpExecute(string className)
-// ReSharper restore UnusedMember.Global
         {
+            if (Assembly == null) return;
+
             var methods =
                 Assembly.GetType(className)
                 .GetMethods(MethodFlags)
@@ -93,9 +93,7 @@ namespace SharpScript
             if (compilerResults.Errors.HasErrors)
             {
                 var errors = compilerResults.Errors.Cast<CompilerError>();
-                #if SHARPSCRIPT_DEBUG
-                    MessageBox.Show(string.Join(Environment.NewLine, errors));
-                #endif
+                MessageBox.Show(string.Join(Environment.NewLine, errors));
                 return;
             }
 
@@ -171,7 +169,8 @@ namespace SharpScript
 
             Browser.ObjectForScripting =
                 new HtmlInteropClass
-                (sharpAssemblies,
+                (
+                    sharpAssemblies,
                     string.Join
                     (
                         Environment.NewLine,

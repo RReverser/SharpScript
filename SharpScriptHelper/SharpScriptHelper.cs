@@ -39,6 +39,7 @@ namespace SharpScript
 
             object resObject;
 
+            #region Setting resObject with separate hack for passing array objects
             if (resType.IsArray)
             {
                 var comType = comObject.GetType();
@@ -61,6 +62,7 @@ namespace SharpScript
             {
                 resObject = comObject;
             }
+            #endregion Setting resObject with separate hack for passing array objects
 
             return (T)resObject;
         }

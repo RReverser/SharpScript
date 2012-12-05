@@ -4,13 +4,14 @@
 	<meta charset="UTF-8">
 	<title>Something</title>
     <meta name="assembly" content="System.Windows.Forms" data-using="." />
+    <meta name="assembly" content="System.Reflection" />
 </head>
 <body>
     <script type="text/x-csharp">
         [Execute]
         static void exec()
         {
-            External.Vars["message"] = "hello world";
+            External.Vars["message"] = "hello world from class " + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName;
         }
     </script>
     <script type="text/javascript">
